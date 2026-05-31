@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Central Walkie - 4 Canales</title>
+    <style>
+        * {
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0a0a0f, #1a1a2e);
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            padding: 16px;
+        }
+        .central-container {
+            max-width: 750px;
+            margin: 0 auto;
+        }
+        
+        /* Selector de canales */
+        .canales-panel {
+            background: #2c2c3e;
+            border-radius: 45px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .canales-titulo {
+            text-align: center;
+            color: #2ed573;
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+        }
+        .canales-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+        }
+        .canal-btn {
+            background: #1e1e2a;
+            border: 2px solid #2ed573;
+            border-radius: 20px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: white;
+        }
+        .canal-btn:hover {
+            transform: scale(0.98);
+            background: #2ed57322;
+        }
+        .canal-btn.activo {
+            background: #2ed573;
+            color: #0a0a0f;
+            box-shadow: 0 0 15px #2ed573;
+        }
+        .canal-nombre {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        .canal-id {
+            font-size: 0.7rem;
+            font-family: monospace;
+            margin-top: 5px;
+            opacity: 0.7;
+        }
+        
+        /* Walkie container */
+        .walkie-container {
+            display: none;
+        }
+        .walkie-container.activo {
+            display: block;
+        }
+        
+        /* Estilos del walkie */
+        .walkie {
+            background: #2c2c3e;
+            border-radius: 45px;
+            padding: 25px;
+            box-shadow: 0 20px 40px rgba(0,0,0,.5);
+        }
+        h1 {
+            text-align: center;
+            color: #ff6b6b;
+            margin: 0;
+            font-size: 1.8rem;
+        }
+        .subtitle {
+            text-align: center;
+            color: #2ed573;
+            font-size: .9rem;
+            margin-bottom: 20px;
+        }
+        
+        /* Indicador de hablando */
+        .hablando-indicador {
+            background: #0a0a0f;
+            border-radius: 12px;
+            padding: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        .hablando-off {
+            color: #888;
+        }
+        .hablando-on {
+            color: #ff4757;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .selector-panel {
+            background: #0a0a0f;
+            border-radius: 18px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .selector-title {
+            color: #888;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+        .user-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        .user-btn {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #2ed573;
+            background: transparent;
+            border-radius: 25px;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .user-btn.selected {
+            background: #2ed573;
+            color: #0a0a0f;
+            box-shadow: 0 0 15px #2ed573;
+        }
+        .user-btn:active {
+            transform: scale(0.97);
+        }
+        .ids-panel {
+            background: #0a0a0f;
+            border-radius: 18px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .id-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 1rem;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .id-label {
+            color: #888;
+        }
+        .id-value {
+            color: #2ed573;
+            font-family: monospace;
+            font-weight: bold;
+            font-size: 1.1rem;
+            word-break: break-all;
+            text-align: right;
+        }
+        .walkies-mini {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .walkie-card {
+            flex: 1;
+            text-align: center;
+            padding: 15px;
+            background: #1e1e2a;
+            border-radius: 25px;
+            border: 2px solid transparent;
+        }
+        .walkie-card.selected {
+            border-color: #2ed573;
+            background: #2ed57322;
+        }
+        .walkie-num {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+        .walkie-status {
+            font-size: .75rem;
+            margin-top: 6px;
+        }
+        .botonera {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .botonera button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 14px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s;
+            font-size: 1rem;
+        }
+        .botonera button:active {
+            transform: scale(.97);
+        }
+        .modo { background: #2ed573; }
+        .limpiar { background: #e74c3c; }
+        .llamar { background: #9b59b6; }
+        .manos-libres { background: #3498db; }
+        .manos-libres.activo { background: #2ed573; box-shadow: 0 0 10px #2ed573; }
+        
+        .ptt-btn {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background: radial-gradient(#34495e, #2c3e50);
+            border: 5px solid #ecf0f1;
+            cursor: pointer;
+            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            font-size: 1rem;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+        }
+        .ptt-btn.disabled {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+        .estado {
+            text-align: center;
+            margin-top: 12px;
+            padding: 10px;
+            border-radius: 12px;
+            font-size: .9rem;
+        }
+        .verde { background: #2ed57322; color: #2ed573; }
+        .rojo { background: #ff475722; color: #ff4757; }
+        .amarillo { background: #ffa50222; color: #ffa502; }
+        
+        .chat-area {
+            margin-top: 20px;
+            border-top: 1px solid #2c2c3e;
+            padding-top: 15px;
+        }
+        .chat-header {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .chat-header button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn-voz-activo { background: #2ed573; color: white; }
+        .btn-texto-activo { background: #ffa502; color: white; }
+        .chat-mensajes {
+            background: #0a0a0f;
+            border-radius: 18px;
+            padding: 12px;
+            height: 140px;
+            overflow-y: auto;
+            font-size: .85rem;
+        }
+        .mensaje-propio { text-align: right; margin: 6px 0; color: #2ed573; }
+        .mensaje-otro { text-align: left; margin: 6px 0; color: #ffa502; }
+        .input-texto {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+        .input-texto input {
+            flex: 1;
+            padding: 12px;
+            border-radius: 25px;
+            border: none;
+            background: #1e1e2a;
+            color: white;
+        }
+        .input-texto button {
+            background: #2ed573;
+            border: none;
+            border-radius: 25px;
+            padding: 0 20px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2ed573;
+            color: #0a0a0f;
+            padding: 10px 20px;
+            border-radius: 35px;
+            font-size: .9rem;
+            z-index: 1000;
+            font-weight: bold;
+            white-space: nowrap;
+            max-width: 90vw;
+            text-align: center;
+            pointer-events: none;
+        }
+        .auto-status {
+            background: #1e1e2a;
+            border-radius: 12px;
+            padding: 8px;
+            margin-bottom: 15px;
+            font-size: .8rem;
+            text-align: center;
+        }
+        .keep-alive-badge {
+            background: #2ed57333;
+            border-radius: 20px;
+            padding: 3px 10px;
+            font-size: 0.7rem;
+            display: inline-block;
+            margin-top: 5px;
+        }
+        .info {
+            font-size: .7rem;
+            color: #888;
+            text-align: center;
+            margin-top: 15px;
+        }
+        @media (max-width: 500px) {
+            .walkie { padding: 18px; }
+            .ptt-btn { width: 120px; height: 120px; }
+            .user-btn { padding: 10px; font-size: 1rem; }
+            .canales-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+<div class="central-container">
+    <!-- Panel de selección de canales -->
+    <div class="canales-panel">
+        <div class="canales-titulo">📡 SELECCIONA CANAL</div>
+        <div class="canales-grid" id="canalesGrid">
+            <div class="canal-btn" data-canal="0">
+                <div class="canal-nombre">🎤 CANAL 1</div>
+                <div class="canal-id">moncho / luci</div>
+            </div>
+            <div class="canal-btn" data-canal="1">
+                <div class="canal-nombre">🎤 CANAL 2</div>
+                <div class="canal-id">MONCHO / diana</div>
+            </div>
+            <div class="canal-btn" data-canal="2">
+                <div class="canal-nombre">🎤 CANAL 3</div>
+                <div class="canal-id">MoNCHo / jorge</div>
+            </div>
+            <div class="canal-btn" data-canal="3">
+                <div class="canal-nombre">🎤 CANAL 4</div>
+                <div class="canal-id">user1 / user2</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CANAL 0: moncho / luci -->
+    <div id="walkie0" class="walkie-container">
+        <div class="walkie">
+            <h1>📞 WALKIE <span style="color:#2ed573">CANAL 1</span></h1>
+            <div class="subtitle">moncho ↔ luci</div>
+            
+            <div class="hablando-indicador" id="indicador0">
+                <span class="hablando-off">🔇 Nadie está hablando</span>
+            </div>
+            
+            <div class="selector-panel">
+                <div class="selector-title">🎭 ELIGE TU IDENTIDAD:</div>
+                <div class="user-buttons">
+                    <button class="user-btn user-a0">👤 moncho</button>
+                    <button class="user-btn user-b0">👥 luci</button>
+                </div>
+            </div>
+            <div class="ids-panel">
+                <div class="id-row"><span class="id-label">🎭 Mi ID:</span><span class="id-value miId0">---</span></div>
+                <div class="id-row"><span class="id-label">👥 ID del amigo:</span><span class="id-value otroId0">---</span></div>
+            </div>
+            <div class="auto-status">🔄 Mantenimiento activo | <span class="keep-alive-badge">🎵 ON</span></div>
+            <div class="walkies-mini">
+                <div class="walkie-card card-mi0"><div class="walkie-num">🎭 YO</div><div class="walkie-status status-mi0">---</div></div>
+                <div class="walkie-card card-otro0"><div class="walkie-num">👥 OTRO</div><div class="walkie-status status-otro0">---</div></div>
+            </div>
+            <div class="botonera">
+                <button class="modoBtn0 modo">📻 MODO PTT</button>
+                <button class="limpiarBtn0 limpiar">🧹 LIMPIAR</button>
+                <button class="llamarBtn0 llamar">📞 LLAMAR</button>
+                <button class="manosLibresBtn0 manos-libres">🔊 MANOS LIBRES</button>
+            </div>
+            <div id="ptt0" class="ptt-btn disabled">🎧<br>SELECCIONA<br>ID</div>
+            <div class="chat-area">
+                <div class="chat-header">
+                    <button class="btnVoz0 btn-voz-activo">🎤 MODO VOZ</button>
+                    <button class="btnTexto0">💬 MODO TEXTO</button>
+                </div>
+                <div class="panelChat0" style="display: none;">
+                    <div class="chat-mensajes chatMensajes0"><div style="color:#888;">💬 Mensajes</div></div>
+                    <div class="input-texto"><input type="text" class="mensajeInput0" placeholder="Escribe..."><button class="enviarBtn0">📨 ENVIAR</button></div>
+                </div>
+            </div>
+            <div class="estado estado0 rojo">⚡ Selecciona moncho o luci</div>
+        </div>
+    </div>
+
+    <!-- CANAL 1: MONCHO / diana -->
+    <div id="walkie1" class="walkie-container">
+        <div class="walkie">
+            <h1>📞 WALKIE <span style="color:#2ed573">CANAL 2</span></h1>
+            <div class="subtitle">MONCHO ↔ diana</div>
+            
+            <div class="hablando-indicador" id="indicador1">
+                <span class="hablando-off">🔇 Nadie está hablando</span>
+            </div>
+            
+            <div class="selector-panel">
+                <div class="selector-title">🎭 ELIGE TU IDENTIDAD:</div>
+                <div class="user-buttons">
+                    <button class="user-btn user-a1">👤 MONCHO</button>
+                    <button class="user-btn user-b1">👥 diana</button>
+                </div>
+            </div>
+            <div class="ids-panel">
+                <div class="id-row"><span class="id-label">🎭 Mi ID:</span><span class="id-value miId1">---</span></div>
+                <div class="id-row"><span class="id-label">👥 ID del amigo:</span><span class="id-value otroId1">---</span></div>
+            </div>
+            <div class="auto-status">🔄 Mantenimiento activo | <span class="keep-alive-badge">🎵 ON</span></div>
+            <div class="walkies-mini">
+                <div class="walkie-card card-mi1"><div class="walkie-num">🎭 YO</div><div class="walkie-status status-mi1">---</div></div>
+                <div class="walkie-card card-otro1"><div class="walkie-num">👥 OTRO</div><div class="walkie-status status-otro1">---</div></div>
+            </div>
+            <div class="botonera">
+                <button class="modoBtn1 modo">📻 MODO PTT</button>
+                <button class="limpiarBtn1 limpiar">🧹 LIMPIAR</button>
+                <button class="llamarBtn1 llamar">📞 LLAMAR</button>
+                <button class="manosLibresBtn1 manos-libres">🔊 MANOS LIBRES</button>
+            </div>
+            <div id="ptt1" class="ptt-btn disabled">🎧<br>SELECCIONA<br>ID</div>
+            <div class="chat-area">
+                <div class="chat-header">
+                    <button class="btnVoz1 btn-voz-activo">🎤 MODO VOZ</button>
+                    <button class="btnTexto1">💬 MODO TEXTO</button>
+                </div>
+                <div class="panelChat1" style="display: none;">
+                    <div class="chat-mensajes chatMensajes1"><div style="color:#888;">💬 Mensajes</div></div>
+                    <div class="input-texto"><input type="text" class="mensajeInput1" placeholder="Escribe..."><button class="enviarBtn1">📨 ENVIAR</button></div>
+                </div>
+            </div>
+            <div class="estado estado1 rojo">⚡ Selecciona MONCHO o diana</div>
+        </div>
+    </div>
+
+    <!-- CANAL 2: MoNCHo / jorge -->
+    <div id="walkie2" class="walkie-container">
+        <div class="walkie">
+            <h1>📞 WALKIE <span style="color:#2ed573">CANAL 3</span></h1>
+            <div class="subtitle">MoNCHo ↔ jorge</div>
+            
+            <div class="hablando-indicador" id="indicador2">
+                <span class="hablando-off">🔇 Nadie está hablando</span>
+            </div>
+            
+            <div class="selector-panel">
+                <div class="selector-title">🎭 ELIGE TU IDENTIDAD:</div>
+                <div class="user-buttons">
+                    <button class="user-btn user-a2">👤 MoNCHo</button>
+                    <button class="user-btn user-b2">👥 jorge</button>
+                </div>
+            </div>
+            <div class="ids-panel">
+                <div class="id-row"><span class="id-label">🎭 Mi ID:</span><span class="id-value miId2">---</span></div>
+                <div class="id-row"><span class="id-label">👥 ID del amigo:</span><span class="id-value otroId2">---</span></div>
+            </div>
+            <div class="auto-status">🔄 Mantenimiento activo | <span class="keep-alive-badge">🎵 ON</span></div>
+            <div class="walkies-mini">
+                <div class="walkie-card card-mi2"><div class="walkie-num">🎭 YO</div><div class="walkie-status status-mi2">---</div></div>
+                <div class="walkie-card card-otro2"><div class="walkie-num">👥 OTRO</div><div class="walkie-status status-otro2">---</div></div>
+            </div>
+            <div class="botonera">
+                <button class="modoBtn2 modo">📻 MODO PTT</button>
+                <button class="limpiarBtn2 limpiar">🧹 LIMPIAR</button>
+                <button class="llamarBtn2 llamar">📞 LLAMAR</button>
+                <button class="manosLibresBtn2 manos-libres">🔊 MANOS LIBRES</button>
+            </div>
+            <div id="ptt2" class="ptt-btn disabled">🎧<br>SELECCIONA<br>ID</div>
+            <div class="chat-area">
+                <div class="chat-header">
+                    <button class="btnVoz2 btn-voz-activo">🎤 MODO VOZ</button>
+                    <button class="btnTexto2">💬 MODO TEXTO</button>
+                </div>
+                <div class="panelChat2" style="display: none;">
+                    <div class="chat-mensajes chatMensajes2"><div style="color:#888;">💬 Mensajes</div></div>
+                    <div class="input-texto"><input type="text" class="mensajeInput2" placeholder="Escribe..."><button class="enviarBtn2">📨 ENVIAR</button></div>
+                </div>
+            </div>
+            <div class="estado estado2 rojo">⚡ Selecciona MoNCHo o jorge</div>
+        </div>
+    </div>
+
+    <!-- CANAL 3: user1 / user2 -->
+    <div id="walkie3" class="walkie-container">
+        <div class="walkie">
+            <h1>📞 WALKIE <span style="color:#2ed573">CANAL 4</span></h1>
+            <div class="subtitle">user1 ↔ user2</div>
+            
+            <div class="hablando-indicador" id="indicador3">
+                <span class="hablando-off">🔇 Nadie está hablando</span>
+            </div>
+            
+            <div class="selector-panel">
+                <div class="selector-title">🎭 ELIGE TU IDENTIDAD:</div>
+                <div class="user-buttons">
+                    <button class="user-btn user-a3">👤 user1</button>
+                    <button class="user-btn user-b3">👥 user2</button>
+                </div>
+            </div>
+            <div class="ids-panel">
+                <div class="id-row"><span class="id-label">🎭 Mi ID:</span><span class="id-value miId3">---</span></div>
+                <div class="id-row"><span class="id-label">👥 ID del amigo:</span><span class="id-value otroId3">---</span></div>
+            </div>
+            <div class="auto-status">🔄 Mantenimiento activo | <span class="keep-alive-badge">🎵 ON</span></div>
+            <div class="walkies-mini">
+                <div class="walkie-card card-mi3"><div class="walkie-num">🎭 YO</div><div class="walkie-status status-mi3">---</div></div>
+                <div class="walkie-card card-otro3"><div class="walkie-num">👥 OTRO</div><div class="walkie-status status-otro3">---</div></div>
+            </div>
+            <div class="botonera">
+                <button class="modoBtn3 modo">📻 MODO PTT</button>
+                <button class="limpiarBtn3 limpiar">🧹 LIMPIAR</button>
+                <button class="llamarBtn3 llamar">📞 LLAMAR</button>
+                <button class="manosLibresBtn3 manos-libres">🔊 MANOS LIBRES</button>
+            </div>
+            <div id="ptt3" class="ptt-btn disabled">🎧<br>SELECCIONA<br>ID</div>
+            <div class="chat-area">
+                <div class="chat-header">
+                    <button class="btnVoz3 btn-voz-activo">🎤 MODO VOZ</button>
+                    <button class="btnTexto3">💬 MODO TEXTO</button>
+                </div>
+                <div class="panelChat3" style="display: none;">
+                    <div class="chat-mensajes chatMensajes3"><div style="color:#888;">💬 Mensajes</div></div>
+                    <div class="input-texto"><input type="text" class="mensajeInput3" placeholder="Escribe..."><button class="enviarBtn3">📨 ENVIAR</button></div>
+                </div>
+            </div>
+            <div class="estado estado3 rojo">⚡ Selecciona user1 o user2</div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+(function(){
+    // Configuración de servidores TURN/STUN
+    const ICE_SERVERS = {
+        iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' },
+            { urls: 'stun:stun3.l.google.com:19302' },
+            { urls: 'stun:stun4.l.google.com:19302' },
+            { urls: 'stun:stun.cloudflare.com:3478' },
+            { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+            { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
+            { urls: 'turn:openrelay.metered.ca:3478', username: 'openrelayproject', credential: 'openrelayproject' }
+        ],
+        iceCandidatePoolSize: 10,
+        iceTransportPolicy: 'all'
+    };
+    const PEER_CONFIG = { host: '0.peerjs.com', port: 443, secure: true, config: ICE_SERVERS, debug: 0 };
+
+    // Definición de los 4 canales (ID internos)
+    const canales = [
+        { userA: "moncho", userB: "luci" },
+        { userA: "MONCHO", userB: "diana" },
+        { userA: "MoNCHo", userB: "jorge" },
+        { userA: "user1", userB: "user2" }
+    ];
+
+    let instancias = [];
+
+    // Clase para cada walkie
+    class WalkieInstance {
+        constructor(idx, userAId, userBId) {
+            this.idx = idx;
+            this.userAId = userAId;
+            this.userBId = userBId;
+            this.miId = "";
+            this.idDestino = "";
+            this.peer = null;
+            this.stream = null;
+            this.llamada = null;
+            this.audio = null;
+            this.conectado = false;
+            this.hablando = false;
+            this.dataConnection = null;
+            this.modoActual = "voz";
+            this.manosLibresActivo = false;
+            this.cambioAutomaticoHabilitado = true;
+            this.reconectando = false;
+            this.alguienHabla = false;
+            this.initDOM();
+            this.initEventListeners();
+        }
+
+        initDOM() {
+            this.container = document.getElementById(`walkie${this.idx}`);
+            this.miIdSpan = document.querySelector(`.miId${this.idx}`);
+            this.otroIdSpan = document.querySelector(`.otroId${this.idx}`);
+            this.statusMi = document.querySelector(`.status-mi${this.idx}`);
+            this.statusOtro = document.querySelector(`.status-otro${this.idx}`);
+            this.estadoDiv = document.querySelector(`.estado${this.idx}`);
+            this.pttBtn = document.getElementById(`ptt${this.idx}`);
+            this.chatMensajes = document.querySelector(`.chatMensajes${this.idx}`);
+            this.mensajeInput = document.querySelector(`.mensajeInput${this.idx}`);
+            this.panelChat = document.querySelector(`.panelChat${this.idx}`);
+            this.btnVoz = document.querySelector(`.btnVoz${this.idx}`);
+            this.btnTexto = document.querySelector(`.btnTexto${this.idx}`);
+            this.indicadorDiv = document.getElementById(`indicador${this.idx}`);
+        }
+
+        actualizarIndicador(hablando, quien) {
+            if(!this.indicadorDiv) return;
+            if(hablando) {
+                this.indicadorDiv.innerHTML = `<span class="hablando-on">🎤 ${quien} está hablando 🔴</span>`;
+            } else {
+                this.indicadorDiv.innerHTML = `<span class="hablando-off">🔇 Nadie está hablando</span>`;
+            }
+        }
+
+        mostrarToast(msg) {
+            let toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        actualizarUI() {
+            if(this.miIdSpan) this.miIdSpan.innerText = this.miId || "❌";
+            if(this.otroIdSpan) this.otroIdSpan.innerText = this.idDestino || "❌";
+            if(this.statusMi) this.statusMi.innerHTML = this.conectado ? '🟢 Conectado' : '🟡 Conectando...';
+            if(this.statusOtro && this.idDestino) this.statusOtro.innerHTML = `🎯 ${this.idDestino}`;
+            
+            const btnA = this.container.querySelector(`.user-a${this.idx}`);
+            const btnB = this.container.querySelector(`.user-b${this.idx}`);
+            if(btnA && btnB) {
+                if(this.miId === this.userAId) {
+                    btnA.classList.add('selected');
+                    btnB.classList.remove('selected');
+                } else if(this.miId === this.userBId) {
+                    btnB.classList.add('selected');
+                    btnA.classList.remove('selected');
+                } else {
+                    btnA.classList.remove('selected');
+                    btnB.classList.remove('selected');
+                }
+            }
+        }
+
+        actualizarEstado(texto, tipo) {
+            if(this.estadoDiv) {
+                this.estadoDiv.innerHTML = texto;
+                this.estadoDiv.className = `estado ${tipo}`;
+            }
+        }
+
+        reproducirSonidoLocal() {
+            try {
+                const audioElement = new Audio('sonido.wav');
+                audioElement.volume = 1.0;
+                audioElement.play().catch(e => console.log("sonido.wav no encontrado"));
+            } catch(e) {}
+        }
+
+        reproducirSonidoLlamada() {
+            try {
+                const audioElement = new Audio('sonido2.wav');
+                audioElement.volume = 1.0;
+                audioElement.play().catch(e => console.log("sonido2.wav no encontrado"));
+            } catch(e) {}
+        }
+
+        agregarMensajeChat(remitente, texto, esMio = false) {
+            if(!this.chatMensajes) return;
+            if(this.chatMensajes.children.length === 1 && this.chatMensajes.children[0].innerText.includes("Mensajes")) {
+                this.chatMensajes.innerHTML = "";
+            }
+            const msgDiv = document.createElement('div');
+            msgDiv.className = esMio ? 'mensaje-propio' : 'mensaje-otro';
+            msgDiv.innerHTML = `<div class="mensaje-nombre">${remitente}:</div><div>${texto}</div>`;
+            this.chatMensajes.appendChild(msgDiv);
+            this.chatMensajes.scrollTop = this.chatMensajes.scrollHeight;
+        }
+
+        enviarEstadoHablando(estado) {
+            if (this.dataConnection && this.dataConnection.open) {
+                this.dataConnection.send({ type: 'hablando', desde: this.miId, estado: estado });
+            }
+        }
+
+        cambiarATextoAutomatico(origen) {
+            if (!this.cambioAutomaticoHabilitado) return;
+            if (this.modoActual === "texto") return;
+            this.cambioAutomaticoHabilitado = false;
+            this.modoActual = "texto";
+            if(this.btnVoz) this.btnVoz.style.background = '#1e1e2a';
+            if(this.btnTexto) this.btnTexto.style.background = '#ffa502';
+            if(this.pttBtn) this.pttBtn.style.display = 'none';
+            if(this.panelChat) this.panelChat.style.display = 'block';
+            this.mostrarToast(`📱 Mensaje de ${origen} - Cambiando a modo texto`);
+            if (this.hablando && !this.manosLibresActivo) {
+                this.detenerLlamada();
+                this.hablando = false;
+                if(this.pttBtn) {
+                    this.pttBtn.style.background = 'radial-gradient(#34495e,#2c3e50)';
+                    this.pttBtn.innerHTML = '🎤<br>MANTÉN PTT';
+                }
+                this.enviarEstadoHablando(false);
+            }
+            setTimeout(() => { this.cambioAutomaticoHabilitado = true; }, 500);
+        }
+
+        cambiarAVozManual() {
+            if (this.modoActual === "voz") return;
+            this.modoActual = "voz";
+            if(this.btnVoz) this.btnVoz.style.background = '#2ed573';
+            if(this.btnTexto) this.btnTexto.style.background = '#1e1e2a';
+            if(this.pttBtn) this.pttBtn.style.display = 'flex';
+            if(this.panelChat) this.panelChat.style.display = 'none';
+            if (this.pttBtn && !this.manosLibresActivo) {
+                this.pttBtn.style.opacity = '1';
+                this.pttBtn.style.pointerEvents = 'auto';
+            }
+            this.mostrarToast(`🎤 Cambiado a modo voz`);
+        }
+
+        async iniciarLlamada() {
+            if(!this.peer || !this.idDestino) return false;
+            if(!this.stream) {
+                try { 
+                    this.stream = await navigator.mediaDevices.getUserMedia({ audio: true }); 
+                    this.stream.getAudioTracks().forEach(t => t.enabled = false); 
+                } catch(e) { 
+                    this.mostrarToast('🎤 Permite el micrófono para usar voz'); 
+                    return false; 
+                }
+            }
+            if (this.manosLibresActivo) {
+                this.stream.getAudioTracks().forEach(t => t.enabled = true);
+            } else {
+                this.stream.getAudioTracks().forEach(t => t.enabled = true);
+            }
+            if(this.llamada) { try { this.llamada.close(); } catch(e) {} }
+            try {
+                this.llamada = this.peer.call(this.idDestino, this.stream);
+                this.llamada.on('error', (err) => { console.error("Error en llamada:", err); });
+                return true;
+            } catch(e) { return false; }
+        }
+
+        detenerLlamada() { 
+            if(this.stream) this.stream.getAudioTracks().forEach(t => t.enabled = false); 
+            if(this.llamada) { try { this.llamada.close(); } catch(e) {} this.llamada = null; } 
+        }
+
+        enviarMensajeTexto() {
+            if(!this.mensajeInput) return;
+            const texto = this.mensajeInput.value.trim();
+            if(!texto) { this.mostrarToast('📝 Escribe un mensaje'); return; }
+            if(!this.idDestino) { this.mostrarToast('⚠️ Selecciona una identidad primero'); return; }
+            if (this.modoActual !== "texto") { this.cambiarATextoAutomatico("Yo"); }
+            if (this.dataConnection && this.dataConnection.open) {
+                this.dataConnection.send({ type: 'texto', desde: this.miId, texto: texto });
+                this.dataConnection.send({ type: 'sonido', desde: this.miId });
+                this.agregarMensajeChat(this.miId, texto, true);
+                this.mensajeInput.value = '';
+                this.mostrarToast(`📨 Enviado a ${this.idDestino} con sonido`);
+            } else {
+                this.mostrarToast('🔄 Canal no disponible');
+            }
+        }
+
+        establecerConexionDatos() {
+            if (!this.peer || !this.idDestino) return;
+            if (this.dataConnection && this.dataConnection.open) return;
+            if (this.dataConnection && this.dataConnection.peer === this.idDestino) {
+                try { this.dataConnection.close(); } catch(e) {}
+                this.dataConnection = null;
+            }
+            try {
+                this.dataConnection = this.peer.connect(this.idDestino, { reliable: true, serialization: 'json' });
+                this.dataConnection.on('open', () => {
+                    this.dataConnection.send({ type: 'handshake', desde: this.miId });
+                });
+                this.dataConnection.on('data', (data) => {
+                    if (data.type === 'texto') {
+                        this.agregarMensajeChat(data.desde, data.texto, false);
+                        this.mostrarToast(`📨 Mensaje de ${data.desde}`);
+                        if (this.cambioAutomaticoHabilitado && this.modoActual !== "texto") {
+                            this.cambiarATextoAutomatico(data.desde);
+                        }
+                    } else if (data.type === 'sonido') {
+                        this.reproducirSonidoLocal();
+                    } else if (data.type === 'llamada') {
+                        this.mostrarToast(`📞 ${data.desde} te está llamando!`);
+                        this.reproducirSonidoLlamada();
+                    } else if (data.type === 'hablando') {
+                        this.actualizarIndicador(data.estado, data.desde);
+                    }
+                });
+                this.dataConnection.on('close', () => { this.dataConnection = null; });
+            } catch(e) {}
+        }
+
+        conectarPeer(miID, otroID) {
+            if(this.reconectando) return;
+            this.reconectando = true;
+            if (this.peer) { try { this.peer.destroy(); } catch(e) {} this.peer = null; }
+            this.miId = miID; this.idDestino = otroID; this.conectado = false; this.hablando = false;
+            this.actualizarUI();
+            this.mostrarToast(`🔌 Conectando como "${miID}"...`);
+            this.actualizarEstado(`🔄 Conectando como "${miID}"...`, 'amarillo');
+            if(this.pttBtn) this.pttBtn.classList.add('disabled');
+            try {
+                this.peer = new Peer(miID, PEER_CONFIG);
+                this.peer.on('open', (id) => {
+                    this.conectado = true;
+                    this.reconectando = false;
+                    this.actualizarEstado(`✅ Conectado como "${this.miId}"`, 'verde');
+                    if(this.pttBtn) this.pttBtn.classList.remove('disabled');
+                    this.mostrarToast(`✅ Conectado como "${this.miId}"!`);
+                    this.actualizarUI();
+                    this.establecerConexionDatos();
+                });
+                this.peer.on('connection', (conn) => {
+                    if (this.dataConnection) { try { this.dataConnection.close(); } catch(e) {} }
+                    this.dataConnection = conn;
+                    this.dataConnection.on('open', () => { this.dataConnection.send({ type: 'handshake', desde: this.miId }); });
+                    this.dataConnection.on('data', (data) => {
+                        if (data.type === 'texto') {
+                            this.agregarMensajeChat(data.desde, data.texto, false);
+                            if (this.cambioAutomaticoHabilitado && this.modoActual !== "texto") {
+                                this.cambiarATextoAutomatico(data.desde);
+                            }
+                        } else if (data.type === 'sonido') { this.reproducirSonidoLocal(); }
+                        else if (data.type === 'llamada') { this.mostrarToast(`📞 ${data.desde} te llama!`); this.reproducirSonidoLlamada(); }
+                        else if (data.type === 'hablando') { this.actualizarIndicador(data.estado, data.desde); }
+                    });
+                });
+                this.peer.on('call', (call) => {
+                    if (this.stream) {
+                        call.answer(this.stream);
+                        call.on('stream', (s) => {
+                            if (this.audio) { this.audio.pause(); this.audio.srcObject = null; }
+                            this.audio = new Audio();
+                            this.audio.srcObject = s;
+                            this.audio.autoplay = true;
+                        });
+                    }
+                });
+                this.peer.on('error', (err) => {
+                    this.reconectando = false;
+                    if (err.type === 'unavailable-id') {
+                        this.mostrarToast(`❌ ID "${miID}" ya está en uso`);
+                        this.actualizarEstado(`❌ ID "${miID}" ocupado`, 'rojo');
+                    }
+                });
+                this.peer.on('disconnected', () => {
+                    this.conectado = false;
+                    if(this.pttBtn) this.pttBtn.classList.add('disabled');
+                });
+            } catch(e) { this.reconectando = false; }
+        }
+
+        seleccionarUserA() {
+            if(this.miId === this.userAId) { this.mostrarToast(`✅ Ya usas ${this.userAId}`); return; }
+            if (this.peer) { try { this.peer.destroy(); } catch(e) {} this.peer = null; }
+            this.conectarPeer(this.userAId, this.userBId);
+        }
+        seleccionarUserB() {
+            if(this.miId === this.userBId) { this.mostrarToast(`✅ Ya usas ${this.userBId}`); return; }
+            if (this.peer) { try { this.peer.destroy(); } catch(e) {} this.peer = null; }
+            this.conectarPeer(this.userBId, this.userAId);
+        }
+        limpiar() {
+            if (this.dataConnection) { try { this.dataConnection.close(); } catch(e) {} this.dataConnection = null; }
+            if (this.llamada) { try { this.llamada.close(); } catch(e) {} this.llamada = null; }
+            if (this.peer) { try { this.peer.destroy(); } catch(e) {} this.peer = null; }
+            if (this.stream) { try { this.stream.getTracks().forEach(t => t.stop()); } catch(e) {} this.stream = null; }
+            this.conectado = false; this.hablando = false;
+            this.miId = ""; this.idDestino = "";
+            this.actualizarUI();
+            this.actualizarEstado("🧹 Limpiado. Selecciona identidad", 'amarillo');
+            if(this.pttBtn) this.pttBtn.classList.add('disabled');
+            this.actualizarIndicador(false, "");
+        }
+        toggleManosLibres() {
+            this.manosLibresActivo = !this.manosLibresActivo;
+            const btn = this.container.querySelector(`.manosLibresBtn${this.idx}`);
+            if (this.manosLibresActivo) {
+                btn.classList.add('activo');
+                btn.innerHTML = '🎙️ MANOS LIBRES ON';
+                if(this.pttBtn) { this.pttBtn.style.opacity = '0.5'; this.pttBtn.style.pointerEvents = 'none'; }
+                if (this.llamada && this.stream) { 
+                    this.stream.getAudioTracks().forEach(t => t.enabled = true);
+                    this.enviarEstadoHablando(true);
+                }
+                else if (this.conectado && this.idDestino) { 
+                    this.iniciarLlamada().then(() => { 
+                        if(this.stream) {
+                            this.stream.getAudioTracks().forEach(t => t.enabled = true);
+                            this.enviarEstadoHablando(true);
+                        }
+                    }); 
+                }
+            } else {
+                btn.classList.remove('activo');
+                btn.innerHTML = '🔊 MANOS LIBRES';
+                if(this.pttBtn) { this.pttBtn.style.opacity = '1'; this.pttBtn.style.pointerEvents = 'auto'; }
+                if (this.llamada && this.hablando) { 
+                    this.detenerLlamada(); 
+                    this.hablando = false;
+                    this.enviarEstadoHablando(false);
+                }
+            }
+        }
+        enviarLlamada() {
+            if (!this.idDestino) { this.mostrarToast('⚠️ Selecciona identidad primero'); return; }
+            if (!this.conectado) { this.mostrarToast('⚠️ Espera a estar conectado'); return; }
+            if (this.dataConnection && this.dataConnection.open) {
+                this.dataConnection.send({ type: 'llamada', desde: this.miId });
+                this.reproducirSonidoLlamada();
+                this.mostrarToast(`✅ Notón enviado a ${this.idDestino}`);
+            } else { this.mostrarToast('🔄 Canal no disponible'); }
+        }
+        toggleModo() {
+            if (this.modoActual === "voz") { this.cambiarAVozManual(); }
+            else { this.cambiarAVozManual(); }
+        }
+
+        initEventListeners() {
+            const btnA = this.container.querySelector(`.user-a${this.idx}`);
+            const btnB = this.container.querySelector(`.user-b${this.idx}`);
+            const modoBtn = this.container.querySelector(`.modoBtn${this.idx}`);
+            const limpiarBtn = this.container.querySelector(`.limpiarBtn${this.idx}`);
+            const llamarBtn = this.container.querySelector(`.llamarBtn${this.idx}`);
+            const manosLibresBtn = this.container.querySelector(`.manosLibresBtn${this.idx}`);
+            const enviarBtn = this.container.querySelector(`.enviarBtn${this.idx}`);
+            const btnVoz = this.container.querySelector(`.btnVoz${this.idx}`);
+            const btnTexto = this.container.querySelector(`.btnTexto${this.idx}`);
+            
+            if(btnA) btnA.onclick = () => this.seleccionarUserA();
+            if(btnB) btnB.onclick = () => this.seleccionarUserB();
+            if(modoBtn) modoBtn.onclick = () => this.toggleModo();
+            if(limpiarBtn) limpiarBtn.onclick = () => this.limpiar();
+            if(llamarBtn) llamarBtn.onclick = () => this.enviarLlamada();
+            if(manosLibresBtn) manosLibresBtn.onclick = () => this.toggleManosLibres();
+            if(enviarBtn) enviarBtn.onclick = () => this.enviarMensajeTexto();
+            if(this.mensajeInput) this.mensajeInput.onkeypress = (e) => { if (e.key === 'Enter') this.enviarMensajeTexto(); };
+            if(btnVoz) btnVoz.onclick = () => this.cambiarAVozManual();
+            if(btnTexto) btnTexto.onclick = () => { this.cambiarATextoAutomatico("Manual"); };
+            
+            if(this.pttBtn) {
+                let isPressed = false;
+                const startTalk = async () => {
+                    if (this.manosLibresActivo) { this.mostrarToast('🎙️ Manos libres activo'); return; }
+                    if (!this.conectado) { this.mostrarToast('⚠️ Espera a estar conectado'); return; }
+                    if (!this.hablando && !isPressed) {
+                        isPressed = true;
+                        if(await this.iniciarLlamada()) {
+                            this.hablando = true;
+                            this.pttBtn.style.background = 'radial-gradient(#ff4757,#c0392b)';
+                            this.pttBtn.innerHTML = '🎤<br>HABLANDO';
+                            this.enviarEstadoHablando(true);
+                        } else { isPressed = false; }
+                    }
+                };
+                const stopTalk = () => {
+                    if (this.manosLibresActivo) return;
+                    if (this.hablando && isPressed) {
+                        this.detenerLlamada();
+                        this.hablando = false;
+                        this.pttBtn.style.background = 'radial-gradient(#34495e,#2c3e50)';
+                        this.pttBtn.innerHTML = '🎤<br>MANTÉN PTT';
+                        this.enviarEstadoHablando(false);
+                    }
+                    isPressed = false;
+                };
+                this.pttBtn.onmousedown = startTalk;
+                this.pttBtn.onmouseup = stopTalk;
+                this.pttBtn.onmouseleave = stopTalk;
+                this.pttBtn.ontouchstart = (e) => { e.preventDefault(); startTalk(); };
+                this.pttBtn.ontouchend = (e) => { e.preventDefault(); stopTalk(); };
+                this.pttBtn.ontouchcancel = (e) => { e.preventDefault(); stopTalk(); };
+            }
+        }
+    }
+
+    // Inicializar todos los walkies
+    for(let i = 0; i < canales.length; i++) {
+        instancias.push(new WalkieInstance(i, canales[i].userA, canales[i].userB));
+    }
+
+    // Selector de canales
+    let canalActivo = 0;
+    function mostrarCanal(idx) {
+        for(let i = 0; i < instancias.length; i++) {
+            const cont = document.getElementById(`walkie${i}`);
+            if(cont) cont.classList.remove('activo');
+        }
+        const contActivo = document.getElementById(`walkie${idx}`);
+        if(contActivo) contActivo.classList.add('activo');
+        
+        const btns = document.querySelectorAll('.canal-btn');
+        btns.forEach((btn, i) => {
+            if(i == idx) btn.classList.add('activo');
+            else btn.classList.remove('activo');
+        });
+        canalActivo = idx;
+    }
+    
+    const btnsCanal = document.querySelectorAll('.canal-btn');
+    btnsCanal.forEach((btn, idx) => {
+        btn.onclick = () => mostrarCanal(idx);
+    });
+    
+    mostrarCanal(0);
+
+    // Precargar permisos de micrófono
+    async function preloadMic() {
+        try {
+            await navigator.mediaDevices.getUserMedia({ audio: true });
+            console.log("✅ Permiso de micrófono concedido");
+        } catch(e) { console.log("⚠️ Sin permiso de micrófono"); }
+    }
+    preloadMic();
+})();
+</script>
+</body>
+</html>
